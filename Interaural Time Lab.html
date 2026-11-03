@@ -1,0 +1,1138 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Interaural Time Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Atkinson+Hyperlegible:wght@400;700&family=Azeret+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: listening-lab bench. Instrument bar (tabs + level + stop), three views.
+   Explore = top-view head diagram | readouts + controls, two-ear oscilloscope strip below.
+   Direction cues = three cue cards, comparison table, background notes, A-weighting table.
+   Left ear blue, right ear red, the audiogram convention. */
+:root{
+  --bg:#ECEFF3;
+  --surface:#FBFCFD;
+  --sunken:#E1E6EC;
+  --ink:#131B25;
+  --muted:#556170;
+  --line:#CAD2DB;
+  --left:#1C58CC;
+  --right:#C9302A;
+  --on-ink:#FBFCFD;
+  --warn-bg:#FBF0DA;
+  --warn-line:#E5C98F;
+  --warn-ink:#563905;
+  --f-display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-data:"Azeret Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E141B; --surface:#151D27; --sunken:#1D2733; --ink:#E3E9F0; --muted:#95A2B1; --line:#2A3645;
+    --left:#6F9DFF; --right:#FF766A; --on-ink:#0E141B;
+    --warn-bg:#2A2214; --warn-line:#5A4724; --warn-ink:#F2DDB2;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E141B; --surface:#151D27; --sunken:#1D2733; --ink:#E3E9F0; --muted:#95A2B1; --line:#2A3645;
+  --left:#6F9DFF; --right:#FF766A; --on-ink:#0E141B;
+  --warn-bg:#2A2214; --warn-line:#5A4724; --warn-ink:#F2DDB2;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+p{margin:0}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* Instrument bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar-in{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;padding-block:10px}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--f-display);font-stretch:118%;font-weight:760;font-size:15px;white-space:nowrap}
+.brand-mark{display:inline-flex;gap:3px}
+.brand-mark i{display:block;width:9px;height:9px;border-radius:50%}
+.brand-mark i:first-child{background:var(--left)}
+.brand-mark i:last-child{background:var(--right)}
+.tabs{display:flex;gap:2px}
+.tab{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:7px;color:var(--muted);text-decoration:none;font-weight:700;font-size:15px;white-space:nowrap}
+.tab .n{display:inline-grid;place-items:center;width:21px;height:21px;border-radius:50%;border:1px solid var(--line);font:500 11px var(--f-data)}
+.tab:hover{color:var(--ink);background:var(--sunken)}
+.tab[aria-current="page"]{color:var(--ink);background:var(--sunken)}
+.tab[aria-current="page"] .n{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
+.level{display:flex;align-items:center;gap:10px;margin-left:auto}
+.level label{font:500 11px var(--f-data);letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.level input{width:140px}
+.level output{font:500 13px var(--f-data);font-variant-numeric:tabular-nums;min-width:52px}
+@media (max-width:760px){
+  .bar{position:static}
+  body::before{display:none}
+  .brand{width:100%}
+  .tabs{width:100%;order:2}
+  .tab{flex:1;justify-content:center;padding:8px 4px;font-size:14px}
+  .level{order:3;width:100%;margin-left:0}
+  .level input{flex:1;width:auto;min-width:0}
+}
+
+/* Type */
+.view{padding-block:34px 80px}
+.view-head{display:grid;gap:10px;margin-bottom:28px;max-width:72ch}
+.eyebrow{font:500 11.5px/1.4 var(--f-data);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-stretch:125%;font-weight:820;font-size:clamp(1.85rem,4.4vw,2.8rem);line-height:1.04;letter-spacing:-.012em;margin:0;text-wrap:balance}
+h2{font-family:var(--f-display);font-stretch:112%;font-weight:760;font-size:1.28rem;line-height:1.2;margin:0;text-wrap:balance}
+h3{font-family:var(--f-display);font-stretch:106%;font-weight:720;font-size:1.06rem;line-height:1.25;margin:0;text-wrap:balance}
+.lede{font-size:1.06rem;color:var(--muted);max-width:64ch}
+.mono{font-family:var(--f-data);font-variant-numeric:tabular-nums}
+
+/* Controls */
+.btn{appearance:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px/1.2 var(--f-body);text-decoration:none;cursor:pointer;transition:border-color .15s,background-color .15s}
+.btn:hover{border-color:var(--muted)}
+.btn-primary{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
+.btn-primary:hover{border-color:var(--ink);opacity:.9}
+.btn-sm{min-height:36px;padding:6px 12px;font-size:14px}
+.btn-l{color:var(--left)}
+.btn-r{color:var(--right)}
+.btn.is-playing{border-color:currentColor;box-shadow:inset 0 0 0 1px currentColor;background:var(--sunken)}
+.btn .ico{width:14px;height:14px;flex:none}
+.btn-hz{font-family:var(--f-data);font-weight:500;font-size:14px;min-width:84px}
+:focus-visible{outline:2px solid var(--left);outline-offset:2px}
+input[type=range]{width:100%;margin:0;height:28px;accent-color:var(--ink);cursor:pointer}
+input[type=range]:disabled{cursor:default;opacity:.45}
+input[type=checkbox]{width:20px;height:20px;margin:0;accent-color:var(--ink);flex:none;cursor:pointer}
+.seg{display:inline-flex;flex-wrap:wrap;gap:3px;padding:3px;background:var(--sunken);border:1px solid var(--line);border-radius:10px;max-width:100%}
+.seg button{appearance:none;border:1px solid transparent;background:transparent;color:var(--muted);font:700 14px/1.2 var(--f-body);padding:9px 14px;border-radius:7px;cursor:pointer;min-height:40px}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.field{display:grid;gap:8px}
+.field-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.field-head label,.label{font-weight:700;font-size:.96rem}
+.field-head output{font:500 .9rem var(--f-data);font-variant-numeric:tabular-nums;text-align:right}
+.hint{font-size:.86rem;color:var(--muted)}
+.switch{display:inline-flex;align-items:center;gap:10px;cursor:pointer}
+.scale{position:relative;height:15px;margin-top:-4px;font:400 11px/15px var(--f-data);color:var(--muted)}
+.scale span{position:absolute;top:0;left:calc(8px + (100% - 16px) * var(--p));transform:translateX(-50%);white-space:nowrap}
+.scale span:first-child{transform:translateX(-8px)}
+.scale span:last-child{transform:translateX(calc(-100% + 8px))}
+.sub{display:grid;gap:6px;padding:12px 14px;background:var(--bg);border-radius:9px}
+.sub.is-off{opacity:.55}
+.sub .field-head label{font-weight:400;font-size:.9rem}
+
+/* Setup */
+.notice{display:grid;gap:12px;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:12px;padding:20px 22px;color:var(--warn-ink);margin-bottom:28px}
+.notice h2{display:flex;align-items:center;gap:10px}
+.notice svg{width:22px;height:22px;flex:none}
+.notice ul{margin:0;padding-left:1.2em;display:grid;gap:6px 36px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:860px){.notice ul{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:980px){.steps{grid-template-columns:minmax(0,1fr)}}
+.step{display:flex;flex-direction:column;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px}
+.step-top{display:flex;align-items:center;gap:12px}
+.step-num{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--on-ink);font:500 13px var(--f-data);flex:none}
+.step p{color:var(--muted);font-size:.96rem}
+.step ul{margin:0;padding-left:1.1em;display:grid;gap:7px;color:var(--muted);font-size:.93rem}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.next-row{display:flex;justify-content:flex-end;margin-top:24px}
+
+/* Explore */
+.explore{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:24px;align-items:start}
+@media (max-width:880px){.explore{grid-template-columns:minmax(0,1fr)}}
+.stage{display:grid;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.stage svg{display:block;width:100%;max-width:460px;height:auto;margin:0 auto;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.stage svg:active{cursor:grabbing}
+.ring{fill:none;stroke:var(--line);stroke-width:1.5}
+.tick{stroke:var(--line);stroke-width:1.5}
+.tick.major{stroke:var(--muted)}
+.dlabel{font:500 11px var(--f-data);fill:var(--muted)}
+.head,.nose{fill:var(--sunken);stroke:var(--ink);stroke-width:2;stroke-linejoin:round}
+.ear-l{fill:var(--left)}
+.ear-r{fill:var(--right)}
+.ear-txt{font-family:var(--f-display);font-weight:800;font-size:17px}
+.ear-txt-l{fill:var(--left)}
+.ear-txt-r{fill:var(--right)}
+.path{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.path-l{stroke:var(--left)}
+.path-r{stroke:var(--right)}
+.path.is-far{stroke-dasharray:7 6}
+.src-dot{fill:var(--ink)}
+.src-core{fill:var(--surface)}
+.src-halo{fill:var(--ink);opacity:.1;transform-box:fill-box;transform-origin:center}
+.stage.playing .src-halo{animation:halo 1.3s ease-out infinite}
+@keyframes halo{from{transform:scale(.6);opacity:.32}to{transform:scale(1.7);opacity:0}}
+@media (prefers-reduced-motion:reduce){.stage.playing .src-halo{animation:none;opacity:.2}}
+.presets{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.presets .btn[aria-pressed="true"]{background:var(--sunken);border-color:var(--ink)}
+.caption{font-size:.85rem;color:var(--muted);text-align:center;text-wrap:balance}
+.panel{display:grid;gap:18px;min-width:0}
+.play-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.btn-play{min-width:118px}
+.mode-hint{font-size:.94rem;color:var(--muted);max-width:60ch}
+.readout{display:grid;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.ro-main{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;margin-top:4px}
+.ro-num{font:500 clamp(2.7rem,7vw,3.7rem)/1 var(--f-data);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.ro-unit{font:500 1.15rem var(--f-data);color:var(--muted)}
+.ro-lead{font-weight:700;width:100%}
+.ro-lead[data-ear="L"]{color:var(--left)}
+.ro-lead[data-ear="R"]{color:var(--right)}
+.ro-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0;padding-top:14px;border-top:1px solid var(--line)}
+@media (max-width:560px){.ro-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ro-grid dt{font-size:.78rem;line-height:1.3;color:var(--muted)}
+.ro-grid dd{margin:3px 0 0;font:500 1rem var(--f-data);font-variant-numeric:tabular-nums}
+.formula{font-size:.8rem;color:var(--muted)}
+.formula code{font-family:var(--f-data);font-size:.78rem;color:var(--ink)}
+.fields{display:grid;gap:20px}
+.back-note{font-size:.86rem;color:var(--warn-ink);background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:7px;padding:6px 10px}
+.scope{display:grid;gap:14px;margin-top:24px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.scope-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 18px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.9rem}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend i{display:inline-block;width:20px;height:3px;border-radius:2px}
+.scope-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:16px}
+@media (max-width:760px){.scope-grid{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;display:grid;gap:6px;min-width:0}
+canvas{display:block;width:100%;height:190px;background:var(--bg);border-radius:8px}
+figcaption{font-size:.83rem;color:var(--muted)}
+.notes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 36px;margin-top:40px}
+.notes > h2{grid-column:1/-1}
+@media (max-width:760px){.notes{grid-template-columns:minmax(0,1fr)}}
+.note{display:grid;gap:6px;align-content:start}
+.note p{color:var(--muted);max-width:62ch}
+
+/* Direction cues */
+.fig-key{font-size:.9rem;color:var(--muted);margin-bottom:12px}
+.cues{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:920px){.cues{grid-template-columns:minmax(0,1fr)}}
+.cue{display:flex;flex-direction:column;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.cue-fig{display:block;width:100%;max-width:240px;height:auto;background:var(--bg);border-radius:8px}
+.fig-l,.fig-r{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.fig-l{stroke:var(--left)}
+.fig-r{stroke:var(--right)}
+.fig-axis{stroke:var(--line);stroke-width:1.2}
+.fig-txt{font:500 8.5px var(--f-data);fill:var(--muted)}
+.aka{display:block;margin-top:3px;font:500 11.5px var(--f-data);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cue > p{color:var(--muted);font-size:.96rem}
+.facts{display:grid;gap:8px;margin:0;padding:12px 0 0;border-top:1px solid var(--line)}
+.facts div{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+.facts dt{font-size:.86rem;color:var(--muted)}
+.facts dd{margin:0;font:500 .9rem var(--f-data);font-variant-numeric:tabular-nums;text-align:right}
+.verdict-chip{align-self:flex-start;margin-top:auto;padding:5px 11px;border-radius:999px;font-weight:700;font-size:.86rem;border:1px solid var(--line);color:var(--muted)}
+.verdict-chip.strong{background:var(--ink);border-color:var(--ink);color:var(--on-ink)}
+.block{margin-top:40px;display:grid;gap:14px}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th,td{padding:10px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+tbody tr:last-child td{border-bottom:0}
+th{font:500 11px var(--f-data);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--bg);white-space:nowrap}
+td.num,th.num{text-align:right;font-family:var(--f-data);font-variant-numeric:tabular-nums;white-space:nowrap}
+td:first-child{font-weight:700;white-space:nowrap}
+.cmp td{min-width:140px}
+.cmp td:first-child{min-width:0}
+.aw-table{max-width:560px}
+.aw-table td:first-child{font-family:var(--f-data);font-weight:500}
+.aw-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 36px;align-items:start}
+@media (max-width:860px){.aw-wrap{grid-template-columns:minmax(0,1fr)}}
+.prose{display:grid;gap:12px}
+.prose p{color:var(--muted);max-width:64ch}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:20;max-width:min(520px,calc(100% - 32px));background:var(--ink);color:var(--on-ink);padding:12px 16px;border-radius:10px;font-size:.93rem;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+</style>
+
+<div class="bar">
+  <div class="wrap bar-in">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i></span>Interaural Time Lab</div>
+    <nav class="tabs" aria-label="Sections">
+      <a class="tab" href="#setup" data-view="setup"><span class="n">1</span>Setup</a>
+      <a class="tab" href="#explore" data-view="explore"><span class="n">2</span>Explore</a>
+      <a class="tab" href="#cues" data-view="cues"><span class="n">3</span>Direction cues</a>
+    </nav>
+    <div class="level">
+      <label for="level">Level</label>
+      <input type="range" id="level" min="-40" max="-6" step="1" value="-24">
+      <output id="levelOut" for="level">−24 dB</output>
+      <button type="button" class="btn btn-sm" id="stopAll" title="Stop all sound (Esc)">Stop</button>
+    </div>
+  </div>
+</div>
+
+<main>
+<!-- ───────────── 1. SETUP ───────────── -->
+<section id="view-setup" class="view">
+  <div class="wrap">
+    <header class="view-head">
+      <span class="eyebrow">Step 1</span>
+      <h1>Set up your ears</h1>
+      <p class="lede">This lab plays one low sound into both ears and delays one ear by the time sound takes to travel around a human head. That delay is the interaural time difference (ITD). Below about 1,500 Hz it's the main cue your brain uses to tell left from right. Spend two minutes here before you listen.</p>
+    </header>
+
+    <div class="notice" role="note">
+      <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4"/><path d="M12 17.5v.01"/></svg>Protect your hearing</h2>
+      <ul>
+        <li>Start with your device volume low and raise it slowly.</li>
+        <li>Low sounds seem quieter than they are. Don't turn the volume up to feel the bass. Your eardrums still take the full pressure.</li>
+        <li>Take a break every 10 to 15 minutes.</li>
+        <li>Stop right away if you feel pain, pressure in your ears, dizziness or nausea, or notice ringing afterwards.</li>
+        <li>If you have a hearing or balance condition, or recent ear surgery, ask a doctor before using this.</li>
+        <li>Don't use this while driving or anywhere you need to hear what's around you.</li>
+        <li>This is a learning tool. It isn't a hearing test and can't diagnose anything.</li>
+      </ul>
+    </div>
+
+    <div class="steps">
+      <article class="step">
+        <div class="step-top"><span class="step-num">1</span><h3>Set a safe volume</h3></div>
+        <p>Turn your device volume down. Press the button to loop a soft 500 Hz tone at the page level. Raise the device volume slowly until the tone is quiet but clear, about as loud as someone speaking softly across a table.</p>
+        <div class="row">
+          <button type="button" class="btn" data-sound="ref" aria-pressed="false"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg><span class="lbl">Play reference</span></button>
+        </div>
+        <ul>
+          <li>After this, leave your device volume alone.</li>
+          <li>Use the Level slider at the top only for small changes.</li>
+          <li>Nothing in Explore plays at a higher signal level than this reference.</li>
+        </ul>
+      </article>
+
+      <article class="step">
+        <div class="step-top"><span class="step-num">2</span><h3>Check left and right</h3></div>
+        <p>Each button beeps three times in one ear only.</p>
+        <div class="row">
+          <button type="button" class="btn btn-l" data-sound="L" aria-pressed="false">Left ear only</button>
+          <button type="button" class="btn btn-r" data-sound="R" aria-pressed="false">Right ear only</button>
+        </div>
+        <ul>
+          <li>Hear it in both ears? Turn off Mono Audio in your accessibility settings.</li>
+          <li>Sides reversed? Turn your headphones around.</li>
+          <li>Turn off spatial audio, head tracking, Dolby Atmos or Windows Sonic. They re-process stereo and change the timing.</li>
+          <li>Use headphones. With speakers, both ears hear both channels and the delay is lost.</li>
+        </ul>
+      </article>
+
+      <article class="step">
+        <div class="step-top"><span class="step-num">3</span><h3>Check your bass</h3></div>
+        <p>These all play at the same level, so the lowest ones will sound quieter. That's normal.</p>
+        <div class="row">
+          <button type="button" class="btn btn-hz" data-sound="b100" aria-pressed="false">100 Hz</button>
+          <button type="button" class="btn btn-hz" data-sound="b70" aria-pressed="false">70 Hz</button>
+          <button type="button" class="btn btn-hz" data-sound="b50" aria-pressed="false">50 Hz</button>
+          <button type="button" class="btn btn-hz" data-sound="b35" aria-pressed="false">35 Hz</button>
+          <button type="button" class="btn btn-hz" data-sound="b25" aria-pressed="false">25 Hz</button>
+        </div>
+        <ul>
+          <li>Many earbuds fade out below 40 to 50 Hz. In the experiment, use frequencies you can hear clearly.</li>
+          <li>If a tone sounds buzzy or rattly, lower the Level. A buzz means distortion is adding higher frequencies, which are easier to locate and would spoil the test.</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="next-row"><a class="btn btn-primary" href="#explore">Go to Explore</a></div>
+  </div>
+</section>
+
+<!-- ───────────── 2. EXPLORE ───────────── -->
+<section id="view-explore" class="view" hidden>
+  <div class="wrap">
+    <header class="view-head">
+      <span class="eyebrow">Step 2 · Headphones on</span>
+      <h1>Move the sound around your head</h1>
+      <p class="lede">Drag the dot around the head or use the controls. Both ears get the same sound at the same loudness. Only the timing differs, by the time sound needs to reach the far ear.</p>
+    </header>
+
+    <div class="explore">
+      <div class="stage" id="stageCard">
+        <svg id="stage" viewBox="0 0 400 400" role="img" aria-label="Top view of a head with a sound source. Drag the dot to move the source.">
+          <circle class="ring" cx="200" cy="200" r="160"/>
+          <g id="ticks"></g>
+          <text class="dlabel" x="200" y="74" text-anchor="middle">0°</text>
+          <text class="dlabel" x="330" y="204" text-anchor="middle">90° R</text>
+          <text class="dlabel" x="200" y="336" text-anchor="middle">180°</text>
+          <text class="dlabel" x="70" y="204" text-anchor="middle">90° L</text>
+          <path class="nose" d="M189 142 L200 126 L211 142 Z"/>
+          <circle class="head" cx="200" cy="200" r="62"/>
+          <path id="pathL" class="path path-l"/>
+          <path id="pathR" class="path path-r"/>
+          <rect class="ear-l" x="133" y="186" width="10" height="28" rx="5"/>
+          <rect class="ear-r" x="257" y="186" width="10" height="28" rx="5"/>
+          <text class="ear-txt ear-txt-l" x="166" y="206" text-anchor="middle">L</text>
+          <text class="ear-txt ear-txt-r" x="234" y="206" text-anchor="middle">R</text>
+          <g id="src"><circle class="src-halo" r="20"/><circle class="src-dot" r="10"/><circle class="src-core" r="3.5"/></g>
+        </svg>
+        <div class="presets">
+          <button type="button" class="btn btn-sm" data-angle="-90">Left 90°</button>
+          <button type="button" class="btn btn-sm" data-angle="0">Front 0°</button>
+          <button type="button" class="btn btn-sm" data-angle="90">Right 90°</button>
+          <button type="button" class="btn btn-sm" id="sweepBtn" aria-pressed="false">Sweep left ↔ right</button>
+        </div>
+        <p class="caption">Top view, not to scale. The dashed line is the far ear's longer path, wrapping around the head.</p>
+      </div>
+
+      <div class="panel">
+        <div class="play-row">
+          <button type="button" class="btn btn-primary btn-play" id="playBtn" aria-pressed="false"></button>
+          <div class="seg" role="group" aria-label="Sound" data-bind="mode">
+            <button type="button" data-value="tone">Pure tone</button>
+            <button type="button" data-value="rumble">Rumble pulses</button>
+          </div>
+        </div>
+        <p class="mode-hint" id="modeHint"></p>
+
+        <div class="readout">
+          <div>
+            <span class="eyebrow">Interaural time difference</span>
+            <div class="ro-main"><span class="ro-num" id="itdBig">0</span><span class="ro-unit">µs</span><span class="ro-lead" id="itdLead"></span></div>
+          </div>
+          <dl class="ro-grid">
+            <div><dt>Extra path to far ear</dt><dd id="roPath">0 cm</dd></div>
+            <div><dt id="roPhaseLbl">Phase shift</dt><dd id="roPhase">0°</dd></div>
+            <div><dt id="roWaveLbl">Wavelength</dt><dd id="roWave">0 m</dd></div>
+            <div><dt id="roSampLbl">Delay in samples</dt><dd id="roSamples">0</dd></div>
+          </dl>
+          <p class="formula">Woodworth's spherical-head model: <code>ITD = (r / c) · (θ + sin θ)</code>, with r = head radius and c = 343 m/s.</p>
+        </div>
+
+        <div class="fields">
+          <div class="field">
+            <div class="field-head"><label for="freq">Frequency</label><output id="freqOut" for="freq"></output></div>
+            <input type="range" id="freq" min="0" max="1000" step="1">
+            <div class="scale" aria-hidden="true"><span style="--p:0">20</span><span style="--p:.3059">50</span><span style="--p:.5372">100</span><span style="--p:.7686">200</span><span style="--p:1">400 Hz</span></div>
+          </div>
+          <div class="field">
+            <div class="field-head"><label class="switch" for="aw"><input type="checkbox" id="aw">Loudness compensation</label><output id="awOut" for="aw"></output></div>
+            <div class="sub" id="awSub">
+              <div class="field-head"><label for="awAnchor">Anchor frequency</label><output id="awAnchorOut" for="awAnchor"></output></div>
+              <input type="range" id="awAnchor" min="0" max="1000" step="1">
+              <div class="scale" aria-hidden="true"><span style="--p:0">20</span><span style="--p:.3059">50</span><span style="--p:.5372">100</span><span style="--p:.7686">200</span><span style="--p:1">400 Hz</span></div>
+            </div>
+            <p class="hint">A-weighting (IEC 61672). Frequencies above the anchor are turned down so they sound about as loud as the anchor. Nothing is ever turned up.</p>
+          </div>
+          <div class="field">
+            <div class="field-head"><label for="angle">Direction</label><output id="angleOut" for="angle"></output></div>
+            <input type="range" id="angle" min="-180" max="180" step="1">
+            <p class="back-note" id="backNote" hidden></p>
+          </div>
+          <div class="field">
+            <div class="field-head"><label for="head">Head size</label><output id="headOut" for="head"></output></div>
+            <input type="range" id="head" min="14" max="21" step="0.5">
+            <p class="hint">Diameter of the model sphere. 17.5 cm is the textbook value for an average adult.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section class="scope" aria-labelledby="scopeTitle">
+      <div class="scope-head">
+        <h2 id="scopeTitle">What each ear receives</h2>
+        <div class="legend"><span><i style="background:var(--left)"></i>Left ear</span><span><i style="background:var(--right)"></i>Right ear</span></div>
+      </div>
+      <div class="scope-grid">
+        <figure><canvas id="scopeMain" aria-label="Waveforms at the left and right ear"></canvas><figcaption id="scopeCap"></figcaption></figure>
+        <figure><canvas id="scopeZoom" aria-label="Zoomed view showing the time shift between ears"></canvas><figcaption>Zoomed in to 2.4 ms around one zero crossing (shaded on the left).</figcaption></figure>
+      </div>
+    </section>
+
+    <section class="notes" aria-labelledby="notesTitle">
+      <h2 id="notesTitle">What to listen for</h2>
+      <div class="note"><h3>Where the sound should appear</h3><p>Over headphones the sound usually sits inside your head rather than out in the room. At 0° it's in the middle. As you move toward 90°, it should slide toward the ear that hears it first.</p></div>
+      <div class="note"><h3>Low versus higher frequencies</h3><p>At 60 Hz one wave lasts about 17 ms, and the largest head delay of about 0.66 ms is only a 14° phase shift. At 400 Hz the same delay is a 94° shift. People are most sensitive near 500 to 1,000 Hz, where they can notice delays of about 10 to 20 µs.</p></div>
+      <div class="note"><h3>Tone versus pulses</h3><p>The pure tone fades in and out in both ears together, so only the phase of the wave differs. The rumble pulses also start earlier in one ear, which gives your brain a second clue. Compare them.</p></div>
+      <div class="note"><h3>Front and back sound the same</h3><p>A source at 30° and one at 150° make the same delay, so timing alone can't separate them. In real life you sort this out by moving your head and through the shape of your outer ears.</p></div>
+      <div class="note"><h3>Only timing changes</h3><p>Both ears always get the same level and the same tone colour. Below 400 Hz a real head barely changes either one. Direction cues, page 3, explains why.</p></div>
+      <div class="note"><h3>How the delay is made</h3><p>Your browser generates the sound live and delays one channel by a fraction of a sample, so the timing matches the model to well under a microsecond.</p></div>
+    </section>
+    <div class="next-row"><a class="btn" href="#cues">Read about direction cues</a></div>
+  </div>
+</section>
+
+<!-- ───────────── 3. DIRECTION CUES ───────────── -->
+<section id="view-cues" class="view" hidden>
+  <div class="wrap">
+    <header class="view-head">
+      <span class="eyebrow">Background</span>
+      <h1>How your brain finds direction</h1>
+      <p class="lede">Three physical clues tell your brain which side a sound comes from. Below 400 Hz, the range this lab uses, one of them does nearly all the work.</p>
+    </header>
+
+    <p class="fig-key">In the sketches the sound is on your left, so the left ear (blue) is the near ear and the right ear (red) is the far ear.</p>
+    <div class="cues">
+      <article class="cue">
+        <svg class="cue-fig" viewBox="0 0 160 64" aria-hidden="true"><line class="fig-axis" x1="4" y1="32" x2="156" y2="32"/><path class="fig-l" id="figT1"/><path class="fig-r" id="figT2"/></svg>
+        <div><h3>Time difference</h3><span class="aka">ITD · interaural time difference</span></div>
+        <p>The far ear's path is longer and wraps around your head, so the near ear hears the sound first. For a sound directly to one side the gap is about 0.66 ms. At low frequencies your brain reads it as a difference in the phase of the two waves.</p>
+        <dl class="facts">
+          <div><dt>Strongest</dt><dd>below 1,500 Hz</dd></div>
+          <div><dt>Largest value</dt><dd>≈ 0.66 ms</dd></div>
+          <div><dt>Smallest noticeable</dt><dd>≈ 10–20 µs</dd></div>
+        </dl>
+        <p class="verdict-chip strong">Main cue below 400 Hz</p>
+      </article>
+      <article class="cue">
+        <svg class="cue-fig" viewBox="0 0 160 64" aria-hidden="true"><line class="fig-axis" x1="4" y1="32" x2="156" y2="32"/><path class="fig-l" id="figL1"/><path class="fig-r" id="figL2"/></svg>
+        <div><h3>Level difference</h3><span class="aka">ILD · interaural level difference</span></div>
+        <p>Your head blocks part of the sound on its way to the far ear, so that ear hears it quieter. How much depends on how the wavelength compares with the size of your head.</p>
+        <dl class="facts">
+          <div><dt>Strongest</dt><dd>above 1,500 Hz</dd></div>
+          <div><dt>At 100 Hz, 90°</dt><dd>under 1 dB</dd></div>
+          <div><dt>At 400 Hz, 90°</dt><dd>≈ 1–3 dB</dd></div>
+        </dl>
+        <p class="verdict-chip">Very small below 400 Hz</p>
+      </article>
+      <article class="cue">
+        <svg class="cue-fig" viewBox="0 0 160 64" aria-hidden="true"><line class="fig-axis" x1="8" y1="54" x2="152" y2="54"/><path class="fig-l" d="M10 18 C60 18 110 19 150 21"/><path class="fig-r" d="M10 20 C62 20 92 24 150 46"/><text class="fig-txt" x="10" y="63">low</text><text class="fig-txt" x="150" y="63" text-anchor="end">high</text></svg>
+        <div><h3>Spectral difference</h3><span class="aka">Head shadow · tone colour</span></div>
+        <p>The head blocks short waves more than long ones, so the far ear gets a duller version with less high end. Your outer ears add their own filtering above about 4 kHz, which helps with front/back and up/down.</p>
+        <dl class="facts">
+          <div><dt>Strongest</dt><dd>several kHz and up</dd></div>
+          <div><dt>Below 400 Hz</dt><dd>almost none</dd></div>
+          <div><dt>Needs</dt><dd>several frequencies</dd></div>
+        </dl>
+        <p class="verdict-chip">Almost absent below 400 Hz</p>
+      </article>
+    </div>
+
+    <section class="block" aria-labelledby="cmpTitle">
+      <h2 id="cmpTitle">At a glance</h2>
+      <div class="table-wrap">
+        <table class="cmp">
+          <thead><tr><th>Cue</th><th>Physical cause</th><th>Works best</th><th>Source at 90°, 100 Hz</th><th>Source at 90°, 400 Hz</th><th>Carried by a pure tone?</th></tr></thead>
+          <tbody>
+            <tr><td>Time</td><td>Longer path to the far ear</td><td>Below about 1,500 Hz</td><td>656 µs, a 24° phase shift</td><td>656 µs, a 94° phase shift</td><td>Yes, as a phase difference</td></tr>
+            <tr><td>Level</td><td>Head shadow</td><td>Above about 1,500 Hz, up to about 20 dB</td><td>Under 1 dB</td><td>About 1–3 dB</td><td>Yes</td></tr>
+            <tr><td>Spectrum</td><td>Head shadow, plus outer-ear filtering above about 4 kHz</td><td>Several kHz and up</td><td>Negligible</td><td>A slight dulling</td><td>No, it needs several frequencies</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="hint">Time values use the 17.5 cm model head. Level values are typical measured figures for an adult head.</p>
+    </section>
+
+    <section class="notes" aria-labelledby="bgTitle">
+      <h2 id="bgTitle">Background</h2>
+      <div class="note"><h3>Diffraction around the head</h3><p>A lens bends light because light travels at a different speed inside the glass. Sound mostly doesn't pass through your head at all. It diffracts, bending around the head. Waves much longer than your head (3.4 m at 100 Hz, 0.86 m at 400 Hz) bend around almost unchanged, so both ears get nearly the same level and tone colour. Waves a few centimetres long, at several kHz, are blocked, and the far ear sits in an acoustic shadow.</p></div>
+      <div class="note"><h3>Two cues, one cause</h3><p>Level and spectral differences both come from the head shadow. Measured at one frequency, the shadow shows up as a level difference. Across many frequencies, it shows up as a change in tone colour. A pure tone can only ever carry the level part: one frequency through any filter just comes out quieter and slightly shifted in time.</p></div>
+      <div class="note"><h3>Duplex theory</h3><p>In 1907 Lord Rayleigh proposed that we use timing for low sounds and level for high sounds, with a crossover around 1,500 Hz. It still holds as the broad picture. Below 400 Hz you're deep in timing territory.</p></div>
+      <div class="note"><h3>Where phase stops working</h3><p>The largest head delay, 0.66 ms, equals half a wave period at about 760 Hz. Above that, the brain can't tell whether a wave leads or lags. By about 1,500 Hz the nerve cells can no longer follow individual waves. In this lab's range the phase is never ambiguous: at 400 Hz the largest shift is 94°, well under 180°.</p></div>
+      <div class="note"><h3>Inside your head or out in the room</h3><p>On headphones, sounds made with timing alone usually sit inside your head, shifted toward one ear. Hearing a sound outside your head, at a distance, comes mostly from room echoes, small head movements and the filtering of your own outer ears. A source very close to your head, under about 1 m, also makes large level differences even at low frequencies, which the brain reads as nearby.</p></div>
+      <div class="note"><h3>Front and back</h3><p>A sound at 30° and one at 150° create the same time and level differences. All the directions that share a given difference form a cone around the line between your ears, called the cone of confusion. You resolve it by turning your head slightly and through outer-ear cues, which need frequencies above about 4 kHz.</p></div>
+    </section>
+
+    <section class="block" aria-labelledby="awTitle">
+      <h2 id="awTitle">Loudness compensation (A-weighting)</h2>
+      <div class="aw-wrap">
+        <div class="prose">
+          <p>Your ears are much less sensitive to low frequencies. At the same signal level, a 400 Hz tone sounds far louder than a 50 Hz tone. A-weighting is the standard curve (IEC 61672) that describes this, based on how loud tones of different frequencies sound at a fairly quiet listening level, the 40-phon equal-loudness curve.</p>
+          <p>In Explore, frequencies above the anchor are turned down by their difference in A-weighting, so they sound about as loud as the anchor. Frequencies at or below the anchor play unchanged. For the rumble, each frequency inside the band gets its own correction.</p>
+          <p>The lab never turns anything up. Matching 20 Hz to the loudness of 400 Hz would take about 46 dB of extra bass, which could hurt your ears and your headphones.</p>
+          <p>A-weighting describes quiet to moderate listening. At louder levels your ear's response flattens, so the compensation can feel a little strong.</p>
+        </div>
+        <div class="table-wrap aw-table">
+          <table>
+            <thead><tr><th>Frequency</th><th class="num">A-weighting</th><th class="num" id="awHead">Applied now</th></tr></thead>
+            <tbody id="awTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>
+</main>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ───── constants & helpers ───── */
+var SPEED = 343;            // m/s at about 20 °C
+var NOISE_T = 2;            // seconds; loop length of the noise buffers
+var PULSE_LEN = 0.4, PULSE_GAP = 0.25;
+var F_MIN = 20, F_MAX = 400;
+var MINUS = '−';
+var FONT_DATA = '"Azeret Mono", ui-monospace, Menlo, monospace';
+function $(s, r){ return (r || document).querySelector(s); }
+function $$(s, r){ return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+function clamp(v, a, b){ return Math.min(b, Math.max(a, v)); }
+function num(v, d){ var s = Number(v).toFixed(d || 0); if (/^-0(\.0+)?$/.test(s)) s = s.slice(1); return s.charAt(0) === '-' ? MINUS + s.slice(1) : s; }
+function dbToGain(db){ return Math.pow(10, db / 20); }
+function wrap180(a){ a = ((a + 180) % 360 + 360) % 360 - 180; return a === -180 ? 180 : a; }
+function shuffle(a){ for (var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+// log-scale sliders, 0..1000 ↔ 20..400 Hz
+function posToF(v){ return Math.round(F_MIN * Math.pow(F_MAX / F_MIN, v / 1000)); }
+function fToPos(f){ return Math.round(1000 * Math.log(f / F_MIN) / Math.log(F_MAX / F_MIN)); }
+
+var store = {
+  get: function(k, d){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+  set: function(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+
+var DEFAULTS = { level:-24, head:17.5, mode:'tone', freq:60, angle:60, aw:true, awAnchor:100 };
+var S = Object.assign({}, DEFAULTS, store.get('itdlab-settings', {}));
+S.level = clamp(Math.round(+S.level), -40, -6); if (isNaN(S.level)) S.level = DEFAULTS.level;
+S.head = clamp(+S.head || DEFAULTS.head, 14, 21);
+S.mode = S.mode === 'rumble' ? 'rumble' : 'tone';
+S.freq = clamp(Math.round(+S.freq) || DEFAULTS.freq, F_MIN, F_MAX);
+S.angle = wrap180(Math.round(+S.angle) || 0);
+S.aw = S.aw !== false;
+S.awAnchor = clamp(Math.round(+S.awAnchor) || DEFAULTS.awAnchor, F_MIN, F_MAX);
+var saveTimer;
+function save(){ clearTimeout(saveTimer); saveTimer = setTimeout(function(){
+  store.set('itdlab-settings', { level:S.level, head:S.head, mode:S.mode, freq:S.freq, angle:S.angle, aw:S.aw, awAnchor:S.awAnchor });
+}, 300); }
+
+var SR = 48000; // replaced by the real sample rate once audio starts
+
+/* ───── the model ───── */
+function itdFor(az, headCm){
+  az = wrap180(az);
+  var A = Math.abs(az);
+  var lat = A <= 90 ? az : (az > 0 ? 1 : -1) * (180 - A);   // front/back fold: same ITD
+  var phi = Math.abs(lat) * Math.PI / 180;
+  var r = headCm / 200;                                       // radius in metres
+  var tau = (r / SPEED) * (phi + Math.sin(phi));
+  return { tau: tau, lead: lat > 0 ? 'R' : (lat < 0 ? 'L' : null), lat: lat, az: az };
+}
+function noiseBand(f){ var hi = Math.round(f); var lo = Math.max(15, Math.round(f / 2)); return [lo, Math.max(hi, lo + 5)]; }
+function freqLabel(m, f){ if (m === 'tone') return f + ' Hz'; var b = noiseBand(f); return b[0] + '–' + b[1] + ' Hz band'; }
+
+/* A-weighting, IEC 61672-1 analytic form (0 dB at 1 kHz) */
+function aWeightDb(f){
+  var f2 = f * f, c1 = 20.598997 * 20.598997, c2 = 107.65265 * 107.65265, c3 = 737.86223 * 737.86223, c4 = 12194.217 * 12194.217;
+  var ra = (c4 * f2 * f2) / ((f2 + c1) * Math.sqrt((f2 + c2) * (f2 + c3)) * (f2 + c4));
+  return 20 * Math.log10(ra) + 2.0;
+}
+/* gain applied to frequency f: only ever ≤ 0 dB */
+function compDb(f, on, anchor){
+  if (on === undefined){ on = S.aw; anchor = S.awAnchor; }
+  if (!on) return 0;
+  return Math.min(0, aWeightDb(anchor) - aWeightDb(f));
+}
+function toneAmp(f){ return 0.5 * dbToGain(compDb(f)); }
+/* power-average compensation across the rumble band */
+function bandCompDb(f){
+  var b = noiseBand(f), sum = 0, n = 0;
+  for (var k = Math.ceil(b[0] * NOISE_T); k <= Math.floor(b[1] * NOISE_T); k++){ var g = dbToGain(compDb(k / NOISE_T)); sum += g * g; n++; }
+  return n ? 10 * Math.log10(sum / n) : 0;
+}
+
+/* Band-limited noise built from sine components on exact 1/NOISE_T Hz bins,
+   so the buffer loops seamlessly and contains nothing outside the band.
+   Each component is scaled by its own A-weighting compensation. */
+var noiseCache = new Map();
+function getNoise(f, sr){
+  var key = Math.round(f) + '@' + sr + '@' + (S.aw ? S.awAnchor : 'off');
+  var nb = noiseCache.get(key);
+  if (nb) return nb;
+  var band = noiseBand(f), N = Math.round(NOISE_T * sr), acc = new Float64Array(N), bins = [];
+  for (var k = Math.ceil(band[0] * NOISE_T); k <= Math.floor(band[1] * NOISE_T); k++) bins.push(k);
+  shuffle(bins);
+  var use = bins.slice(0, 96);
+  var g0 = 0.3536 / Math.sqrt(use.length / 2);   // unweighted RMS equals a 0.5-amplitude sine
+  use.forEach(function(kk){
+    var amp = g0 * dbToGain(compDb(kk / NOISE_T));
+    var w = 2 * Math.PI * (kk / NOISE_T) / sr, ph = Math.random() * 2 * Math.PI, c2 = 2 * Math.cos(w);
+    var s1 = Math.sin(ph - w), s0 = Math.sin(ph);
+    acc[0] += amp * s0;
+    for (var n = 1; n < N; n++){ var s = c2 * s0 - s1; s1 = s0; s0 = s; acc[n] += amp * s; }
+  });
+  var data = new Float32Array(N); for (var n3 = 0; n3 < N; n3++) data[n3] = acc[n3];
+  nb = { data: data, sr: sr, N: N, dur: NOISE_T, buffer: null };
+  noiseCache.set(key, nb);
+  if (noiseCache.size > 24) noiseCache.delete(noiseCache.keys().next().value);
+  return nb;
+}
+function noiseAt(nb, t){ var x = t * nb.sr; x = ((x % nb.N) + nb.N) % nb.N; var i = Math.floor(x), fr = x - i; var a = nb.data[i], b = nb.data[(i + 1) % nb.N]; return a + (b - a) * fr; }
+
+var UP = new Float32Array(64), DOWN = new Float32Array(64);
+for (var ci = 0; ci < 64; ci++){ var cv = 0.5 - 0.5 * Math.cos(Math.PI * ci / 63); UP[ci] = cv; DOWN[63 - ci] = cv; }
+
+/* ───── audio engine ─────
+   bus → guard low-pass ×2 → delay L / delay R → merger → post (shared envelope) → master level → out
+   Tone: envelope on "post", after the delays, so both ears fade together (phase cue only).
+   Rumble: envelope on each pulse, before the delays, so onsets are delayed too (full time cue). */
+var AE = {
+  ctx: null, n: null, tone: null, pulses: new Set(), timer: null, nextPulse: 0, sx: new Set(),
+  ensure: function(){
+    if (!this.ctx){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch(e){}
+      var ctx = this.ctx = new AC();
+      var n = this.n = {};
+      n.master = ctx.createGain(); n.master.gain.value = dbToGain(S.level); n.master.connect(ctx.destination);
+      n.bus = ctx.createGain();
+      n.lp1 = ctx.createBiquadFilter(); n.lp2 = ctx.createBiquadFilter();
+      [n.lp1, n.lp2].forEach(function(lp){ lp.type = 'lowpass'; lp.Q.value = Math.SQRT1_2; lp.frequency.value = 130; });
+      n.dL = ctx.createDelay(0.02); n.dR = ctx.createDelay(0.02);
+      n.merge = ctx.createChannelMerger(2);
+      n.post = ctx.createGain(); n.post.gain.value = 0;
+      n.bus.connect(n.lp1); n.lp1.connect(n.lp2);
+      n.lp2.connect(n.dL); n.lp2.connect(n.dR);
+      n.dL.connect(n.merge, 0, 0); n.dR.connect(n.merge, 0, 1);
+      n.merge.connect(n.post); n.post.connect(n.master);
+      SR = ctx.sampleRate;
+      updateExplore();
+    }
+    if (this.ctx.state !== 'running'){ var p = this.ctx.resume(); if (p && p.catch) p.catch(function(){}); }
+    return this.ctx;
+  },
+  now: function(){ return this.ctx.currentTime; },
+  hold: function(param, t){
+    if (param.cancelAndHoldAtTime) param.cancelAndHoldAtTime(t);
+    else { var v = param.value; param.cancelScheduledValues(t); param.setValueAtTime(v, t); }
+  },
+  busy: function(){
+    if (this.tone || this.timer) return true;
+    var now = this.now(), b = false;
+    this.pulses.forEach(function(s){ if (s._end > now) b = true; });
+    return b;
+  },
+  setLevel: function(db){ if (!this.ctx) return; var p = this.n.master.gain, t = this.now(); this.hold(p, t); p.setTargetAtTime(dbToGain(db), t, 0.04); },
+  setITD: function(tau, lead, immediate){
+    if (!this.ctx) return;
+    var t = this.now(), self = this;
+    [[this.n.dL.delayTime, lead === 'R' ? tau : 0], [this.n.dR.delayTime, lead === 'L' ? tau : 0]].forEach(function(pv){
+      var p = pv[0], v = pv[1];
+      if (immediate){ p.cancelScheduledValues(t); p.setValueAtTime(v, t); }
+      else { self.hold(p, t); p.setTargetAtTime(v, t, 0.03); }
+    });
+  },
+  setGuard: function(f, immediate){
+    if (!this.ctx) return;
+    var t = this.now(), fc = Math.max(26, f * 1.3), self = this;
+    [this.n.lp1, this.n.lp2].forEach(function(lp){
+      if (immediate){ lp.frequency.cancelScheduledValues(t); lp.frequency.setValueAtTime(fc, t); }
+      else { self.hold(lp.frequency, t); lp.frequency.setTargetAtTime(fc, t, 0.03); }
+    });
+  },
+  silence: function(fade){
+    var t = this.now(), end = t + fade, p = this.n.post.gain;
+    this.hold(p, t); p.linearRampToValueAtTime(0, end);
+    if (this.tone){ var tone = this.tone; this.tone = null; try { tone.osc.stop(end + 0.02); } catch(e){} }
+    clearInterval(this.timer); this.timer = null;
+    this.pulses.forEach(function(s){ try { s.stop(end + 0.02); } catch(e){} });
+    this.pulses.clear();
+    return end + 0.03;
+  },
+  stop: function(fade){ if (!this.ctx) return; this.silence(fade == null ? 0.15 : fade); this.stopSimple(); },
+  startTone: function(f){
+    var busy = this.busy(), t0 = busy ? this.silence(0.06) : this.now() + 0.03, p = this.n.post.gain, ctx = this.ctx, self = this;
+    if (!busy) this.hold(p, this.now());
+    var osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = 'sine'; osc.frequency.value = f; g.gain.value = toneAmp(f);
+    osc.connect(g); g.connect(this.n.bus); osc.start(t0);
+    var tone = { osc: osc, g: g };
+    osc.onended = function(){ g.disconnect(); if (self.tone === tone) self.tone = null; };
+    this.tone = tone;
+    p.setValueAtTime(0, t0); p.linearRampToValueAtTime(1, t0 + 0.35);
+  },
+  setTone: function(f){
+    if (!this.tone) return;
+    var t = this.now(), pf = this.tone.osc.frequency, pg = this.tone.g.gain;
+    this.hold(pf, t); pf.setTargetAtTime(f, t, 0.03);
+    this.hold(pg, t); pg.setTargetAtTime(toneAmp(f), t, 0.03);
+  },
+  startRumble: function(){
+    var busy = this.busy(), t0 = busy ? this.silence(0.06) : this.now() + 0.03, p = this.n.post.gain, self = this;
+    if (!busy) this.hold(p, this.now());
+    p.setValueAtTime(1, t0);
+    this.nextPulse = t0;
+    this.tick();
+    this.timer = setInterval(function(){ self.tick(); }, 50);
+  },
+  tick: function(){
+    var now = this.now();
+    if (this.nextPulse < now + 0.01) this.nextPulse = now + 0.02;
+    while (this.nextPulse < now + 0.3){ this.pulse(this.nextPulse, PULSE_LEN, S.freq); this.nextPulse += PULSE_LEN + PULSE_GAP; }
+  },
+  pulse: function(t, len, f){
+    var ctx = this.ctx, nb = getNoise(f, ctx.sampleRate);
+    if (!nb.buffer){
+      var b = ctx.createBuffer(1, nb.N, ctx.sampleRate);
+      if (b.copyToChannel) b.copyToChannel(nb.data, 0); else b.getChannelData(0).set(nb.data);
+      nb.buffer = b;
+    }
+    var src = ctx.createBufferSource(), g = ctx.createGain(), r = Math.min(0.07, len / 3), self = this;
+    src.buffer = nb.buffer; src.loop = true;
+    g.gain.value = 0;
+    g.gain.setValueCurveAtTime(UP, t, r);
+    g.gain.setValueCurveAtTime(DOWN, t + len - r, r);
+    src.connect(g); g.connect(this.n.bus);
+    src.start(t, Math.random() * nb.dur);
+    src.stop(t + len + 0.01);
+    src._end = t + len;
+    this.pulses.add(src);
+    src.onended = function(){ self.pulses.delete(src); try { g.disconnect(); } catch(e){} };
+  },
+  /* plain sounds for the setup page: no delay, no compensation, chosen channel */
+  simple: function(o){
+    var ctx = this.ctx, t = this.now() + 0.03, A = 0.5, self = this;
+    var osc = ctx.createOscillator(), g = ctx.createGain(), m = ctx.createChannelMerger(2), G = g.gain, end = 0;
+    osc.frequency.value = o.f; g.gain.value = 0;
+    osc.connect(g);
+    if (o.ch !== 'R') g.connect(m, 0, 0);
+    if (o.ch !== 'L') g.connect(m, 0, 1);
+    m.connect(this.n.master);
+    if (o.beeps){
+      var x = t;
+      for (var i = 0; i < o.beeps; i++){ G.setValueAtTime(0, x); G.linearRampToValueAtTime(A, x + 0.02); G.setValueAtTime(A, x + 0.2); G.linearRampToValueAtTime(0, x + 0.22); x += 0.34; }
+      end = x;
+    } else if (o.loop){
+      G.setValueAtTime(0, t); G.linearRampToValueAtTime(A, t + 0.15);
+    } else {
+      G.setValueAtTime(0, t); G.linearRampToValueAtTime(A, t + 0.2); G.setValueAtTime(A, t + o.dur - 0.25); G.linearRampToValueAtTime(0, t + o.dur);
+      end = t + o.dur;
+    }
+    osc.start(t); if (end) osc.stop(end + 0.03);
+    var h = { key: o.key, done: false, stopping: false };
+    h.stop = function(){
+      if (h.done || h.stopping) return; h.stopping = true;
+      var n = self.now(); self.hold(G, n); G.linearRampToValueAtTime(0, n + 0.08);
+      try { osc.stop(n + 0.1); } catch(e){}
+    };
+    osc.onended = function(){ h.done = true; try { g.disconnect(); m.disconnect(); } catch(e){} self.sx.delete(h); onSimpleEnd(h); };
+    this.sx.add(h);
+    return h;
+  },
+  stopSimple: function(){ this.sx.forEach(function(h){ h.stop(); }); }
+};
+
+function toast(msg){ var t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.timer); toast.timer = setTimeout(function(){ t.hidden = true; }, 5000); }
+function audioMissing(){ toast("This browser can't play generated audio. Try a recent Chrome, Edge, Firefox or Safari."); }
+
+/* ───── level bar ───── */
+var levelEl = $('#level'), levelOut = $('#levelOut');
+function renderLevel(){ levelEl.value = S.level; levelOut.textContent = num(S.level) + ' dB'; }
+levelEl.addEventListener('input', function(){ S.level = +levelEl.value; renderLevel(); AE.setLevel(S.level); save(); });
+$('#stopAll').addEventListener('click', stopEverything);
+
+function stopEverything(){
+  stopSweep();
+  if (AE.ctx) AE.stop(0.12);
+  explorePlaying = false; renderPlayBtn();
+}
+
+/* ───── setup sounds ───── */
+var SOUNDS = {
+  ref: { f: 500, ch: 'B', loop: true },
+  L:   { f: 500, ch: 'L', beeps: 3 },
+  R:   { f: 500, ch: 'R', beeps: 3 },
+  b100:{ f: 100, ch: 'B', dur: 2 }, b70:{ f: 70, ch: 'B', dur: 2 }, b50:{ f: 50, ch: 'B', dur: 2 },
+  b35: { f: 35, ch: 'B', dur: 2 }, b25:{ f: 25, ch: 'B', dur: 2 }
+};
+var simpleH = null;
+function renderSimpleButtons(){
+  $$('[data-sound]').forEach(function(btn){
+    var on = !!(simpleH && !simpleH.stopping && simpleH.key === btn.dataset.sound);
+    btn.classList.toggle('is-playing', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    var lbl = $('.lbl', btn);
+    if (lbl) lbl.textContent = on ? 'Stop reference' : 'Play reference';
+  });
+}
+function onSimpleEnd(h){ if (h === simpleH) simpleH = null; renderSimpleButtons(); }
+$$('[data-sound]').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    var key = btn.dataset.sound;
+    if (simpleH && simpleH.key === key && !simpleH.stopping){ simpleH.stop(); renderSimpleButtons(); return; }
+    if (!AE.ensure()) return audioMissing();
+    if (explorePlaying) exploreStop(); else AE.silence(0.05);
+    AE.stopSimple();
+    simpleH = AE.simple(Object.assign({ key: key }, SOUNDS[key]));
+    renderSimpleButtons();
+  });
+});
+
+/* ───── explore ───── */
+var explorePlaying = false;
+var CX = 200, CY = 200, HR = 62, SD = 160;
+function P(az, r){ var a = az * Math.PI / 180; return [CX + r * Math.sin(a), CY - r * Math.cos(a)]; }
+function f2(v){ return Math.round(v * 100) / 100; }
+function earPath(earAz, srcAz){
+  var s = P(srcAz, SD), e = P(earAz, HR), d = wrap180(earAz - srcAz);
+  var alpha = Math.acos(HR / SD) * 180 / Math.PI;
+  if (Math.abs(d) <= alpha) return { d: 'M' + f2(s[0]) + ' ' + f2(s[1]) + ' L' + f2(e[0]) + ' ' + f2(e[1]), len: Math.hypot(e[0] - s[0], e[1] - s[1]) };
+  var sg = d >= 0 ? 1 : -1, tp = P(srcAz + sg * alpha, HR), arc = Math.abs(d) - alpha;
+  return {
+    d: 'M' + f2(s[0]) + ' ' + f2(s[1]) + ' L' + f2(tp[0]) + ' ' + f2(tp[1]) + ' A' + HR + ' ' + HR + ' 0 0 ' + (sg > 0 ? 1 : 0) + ' ' + f2(e[0]) + ' ' + f2(e[1]),
+    len: Math.sqrt(SD * SD - HR * HR) + HR * arc * Math.PI / 180
+  };
+}
+(function buildTicks(){
+  var g = $('#ticks'), NS = 'http://www.w3.org/2000/svg';
+  for (var a = 0; a < 360; a += 15){
+    var major = a % 90 === 0, p1 = P(a, major ? 151 : 155), p2 = P(a, 166), l = document.createElementNS(NS, 'line');
+    l.setAttribute('x1', f2(p1[0])); l.setAttribute('y1', f2(p1[1])); l.setAttribute('x2', f2(p2[0])); l.setAttribute('y2', f2(p2[1]));
+    l.setAttribute('class', 'tick' + (major ? ' major' : ''));
+    g.appendChild(l);
+  }
+})();
+function describeAngle(az){
+  az = wrap180(az); var A = Math.abs(az);
+  if (A === 0) return 'Straight ahead';
+  if (A === 180) return 'Directly behind';
+  var side = az > 0 ? 'right' : 'left';
+  if (A === 90) return 'Directly to your ' + side;
+  return A + '° to your ' + side + (A < 90 ? ', in front' : ', behind');
+}
+var MODE_HINT = {
+  tone: 'A steady sine wave. It fades in and out in both ears together, so the only difference between your ears is the phase of the wave.',
+  rumble: 'Bursts of low noise one octave wide. Each burst starts earlier in one ear and the waves are shifted too, so your brain gets two timing clues.'
+};
+function renderSeg(key){
+  $$('[data-bind="' + key + '"] button').forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.value) === String(S[key]) ? 'true' : 'false'); });
+}
+function renderPlayBtn(){
+  var b = $('#playBtn');
+  b.innerHTML = explorePlaying
+    ? '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9" rx="1" fill="currentColor"/></svg><span>Stop</span>'
+    : '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"/></svg><span>Play</span>';
+  b.setAttribute('aria-pressed', explorePlaying ? 'true' : 'false');
+  $('#stageCard').classList.toggle('playing', explorePlaying);
+}
+function renderAw(){
+  $('#aw').checked = S.aw;
+  $('#awAnchor').value = fToPos(S.awAnchor);
+  $('#awAnchor').disabled = !S.aw;
+  $('#awSub').classList.toggle('is-off', !S.aw);
+  $('#awAnchorOut').textContent = S.awAnchor + ' Hz';
+  var out = $('#awOut');
+  if (!S.aw) out.textContent = 'Off';
+  else if (S.mode === 'tone') out.textContent = num(compDb(S.freq), 1) + ' dB at ' + S.freq + ' Hz';
+  else out.textContent = num(bandCompDb(S.freq), 1) + ' dB on the band';
+}
+function updateExplore(){
+  var r = itdFor(S.angle, S.head), f = S.freq;
+  $('#itdBig').textContent = Math.round(r.tau * 1e6);
+  var lead = $('#itdLead');
+  lead.textContent = r.lead ? (r.lead === 'L' ? 'Left ear hears it first' : 'Right ear hears it first') : 'Both ears at the same moment';
+  lead.dataset.ear = r.lead || '';
+  $('#roPath').textContent = num(r.tau * SPEED * 100, 1) + ' cm';
+  $('#roPhaseLbl').textContent = 'Phase shift at ' + f + ' Hz';
+  $('#roPhase').textContent = num(r.tau * f * 360, 1) + '°';
+  $('#roWaveLbl').textContent = 'Wavelength at ' + f + ' Hz';
+  $('#roWave').textContent = num(SPEED / f, 2) + ' m';
+  $('#roSampLbl').textContent = 'Delay in samples at ' + num(SR / 1000, SR % 1000 ? 1 : 0) + ' kHz';
+  $('#roSamples').textContent = num(r.tau * SR, 1);
+  if (document.activeElement !== $('#freq')) $('#freq').value = fToPos(f);
+  $('#freqOut').textContent = freqLabel(S.mode, f);
+  $('#angle').value = r.az; $('#angleOut').textContent = describeAngle(r.az);
+  $('#head').value = S.head; $('#headOut').textContent = num(S.head, 1) + ' cm';
+  var A = Math.abs(r.az), bn = $('#backNote');
+  if (A > 90){ bn.hidden = false; bn.textContent = A === 180 ? 'Same timing as straight ahead. Timing alone can’t tell front from back.' : 'Same timing as ' + (180 - A) + '° in front. Timing alone can’t tell front from back.'; }
+  else bn.hidden = true;
+  $('#modeHint').textContent = MODE_HINT[S.mode];
+  renderSeg('mode');
+  renderAw();
+  // diagram
+  var s = P(r.az, SD);
+  $('#src').setAttribute('transform', 'translate(' + f2(s[0]) + ' ' + f2(s[1]) + ')');
+  var pl = earPath(-90, r.az), pr = earPath(90, r.az);
+  $('#pathL').setAttribute('d', pl.d); $('#pathR').setAttribute('d', pr.d);
+  $('#pathL').classList.toggle('is-far', pl.len - pr.len > 0.5);
+  $('#pathR').classList.toggle('is-far', pr.len - pl.len > 0.5);
+  $$('.presets [data-angle]').forEach(function(b){ b.setAttribute('aria-pressed', +b.dataset.angle === r.az ? 'true' : 'false'); });
+  if (explorePlaying) AE.setITD(r.tau, r.lead, false);
+  scheduleScope();
+  save();
+}
+function exploreStart(){
+  if (!AE.ensure()) return audioMissing();
+  AE.stopSimple();
+  var r = itdFor(S.angle, S.head);
+  if (!AE.busy()){ AE.setITD(r.tau, r.lead, true); AE.setGuard(S.freq, true); }
+  else { AE.setITD(r.tau, r.lead, false); AE.setGuard(S.freq, false); }
+  if (S.mode === 'tone') AE.startTone(S.freq); else AE.startRumble();
+  explorePlaying = true; renderPlayBtn();
+}
+function exploreStop(){ stopSweep(); if (AE.ctx) AE.silence(0.15); explorePlaying = false; renderPlayBtn(); }
+$('#playBtn').addEventListener('click', function(){ if (explorePlaying) exploreStop(); else exploreStart(); });
+
+function setAngle(a){ stopSweep(); S.angle = wrap180(a); updateExplore(); }
+$('#angle').addEventListener('input', function(e){ setAngle(+e.target.value); });
+$('#freq').addEventListener('input', function(e){
+  var f = posToF(+e.target.value);
+  if (f === S.freq) return;
+  S.freq = f; updateExplore();
+  if (explorePlaying){ AE.setGuard(S.freq, false); if (S.mode === 'tone') AE.setTone(S.freq); }
+});
+$('#head').addEventListener('input', function(e){ S.head = +e.target.value; updateExplore(); });
+function onCompChange(){
+  renderAw(); renderAwTable(); scheduleScope(); save();
+  if (explorePlaying && S.mode === 'tone') AE.setTone(S.freq);
+}
+$('#aw').addEventListener('change', function(e){ S.aw = e.target.checked; onCompChange(); });
+$('#awAnchor').addEventListener('input', function(e){ var f = posToF(+e.target.value); if (f === S.awAnchor) return; S.awAnchor = f; onCompChange(); });
+$$('.presets [data-angle]').forEach(function(b){ b.addEventListener('click', function(){ setAngle(+b.dataset.angle); }); });
+
+var svg = $('#stage'), dragging = false;
+function angleFromEvent(e){
+  var rc = svg.getBoundingClientRect();
+  var x = (e.clientX - rc.left) / rc.width * 400 - CX, y = (e.clientY - rc.top) / rc.height * 400 - CY;
+  return Math.round(Math.atan2(x, -y) * 180 / Math.PI);
+}
+svg.addEventListener('pointerdown', function(e){ dragging = true; try { svg.setPointerCapture(e.pointerId); } catch(err){} setAngle(angleFromEvent(e)); e.preventDefault(); });
+svg.addEventListener('pointermove', function(e){ if (dragging) setAngle(angleFromEvent(e)); });
+['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function(t){ svg.addEventListener(t, function(){ dragging = false; }); });
+
+// sweep
+var sweepOn = false, sweepRaf = 0, sweepT0 = 0, sweepOff = 0;
+function startSweep(){
+  if (sweepOn) return;
+  if (!explorePlaying) exploreStart();
+  if (!explorePlaying) return;
+  sweepOn = true;
+  sweepOff = Math.asin(clamp(itdFor(S.angle, S.head).lat / 90, -1, 1));
+  sweepT0 = performance.now();
+  $('#sweepBtn').setAttribute('aria-pressed', 'true');
+  var step = function(now){
+    if (!sweepOn) return;
+    S.angle = Math.round(90 * Math.sin((now - sweepT0) / 8000 * 2 * Math.PI + sweepOff));
+    updateExplore();
+    sweepRaf = requestAnimationFrame(step);
+  };
+  sweepRaf = requestAnimationFrame(step);
+}
+function stopSweep(){ sweepOn = false; cancelAnimationFrame(sweepRaf); $('#sweepBtn').setAttribute('aria-pressed', 'false'); }
+$('#sweepBtn').addEventListener('click', function(){ if (sweepOn) stopSweep(); else startSweep(); });
+
+/* ───── oscilloscope ───── */
+var scopeQueued = false;
+function scheduleScope(){ if (scopeQueued) return; scopeQueued = true; requestAnimationFrame(function(){ scopeQueued = false; drawScope(); }); }
+function setupCanvas(cv){
+  var dpr = Math.min(window.devicePixelRatio || 1, 2), w = cv.clientWidth, h = cv.clientHeight;
+  if (!w || !h) return null;
+  var W = Math.round(w * dpr), H = Math.round(h * dpr);
+  if (cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
+  var g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+  return { g: g, w: w, h: h };
+}
+function findRise(fn, start, span, sr){
+  var dt = 1 / sr, prev = fn(start);
+  for (var t = start + dt; t < start + span; t += dt){ var v = fn(t); if (prev < 0 && v >= 0) return t - dt + dt * (-prev / (v - prev)); prev = v; }
+  return start;
+}
+function fmtMs(v){ var d = Number.isInteger(v) ? 0 : (Math.abs(v * 10) % 1 > 1e-9 ? 2 : 1); return v === 0 ? '0' : num(v, d) + ' ms'; }
+function drawWave(cv, o){
+  var c = setupCanvas(cv); if (!c) return;
+  var g = c.g, w = c.w, h = c.h, col = o.col;
+  var pl = 10, pr = 10, pt = o.zoom ? 34 : 12, pb = 24, pw = w - pl - pr, ph = h - pt - pb, my = pt + ph / 2, amp = ph / 2 * 0.9;
+  var X = function(t){ return pl + (t - o.t0) / (o.t1 - o.t0) * pw; };
+  if (o.hl){ g.fillStyle = col.hl; g.fillRect(X(o.hl[0]), pt, Math.max(2, X(o.hl[1]) - X(o.hl[0])), ph); }
+  g.strokeStyle = col.line; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(pl, my); g.lineTo(w - pr, my); g.stroke();
+  // time ticks, labelled relative to the leading ear's zero crossing
+  var spanMs = (o.t1 - o.t0) * 1000, steps = o.zoom ? [0.25, 0.5, 1] : [1, 2, 5, 10, 20, 25, 50, 100], step = steps[steps.length - 1];
+  for (var si = 0; si < steps.length; si++){ if (spanMs / steps[si] <= 8){ step = steps[si]; break; } }
+  g.font = '11px ' + FONT_DATA; g.fillStyle = col.muted; g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+  var k0 = Math.ceil((o.t0 - o.zc) * 1000 / step), k1 = Math.floor((o.t1 - o.zc) * 1000 / step);
+  for (var k = k0; k <= k1; k++){
+    var x = X(o.zc + k * step / 1000);
+    g.strokeStyle = col.line; g.beginPath(); g.moveTo(x, pt + ph); g.lineTo(x, pt + ph + 4); g.stroke();
+    if (x < pl + 20 || x > w - pr - 20) continue;
+    g.fillText(fmtMs(Math.round(k * step * 100) / 100), x, h - 6);
+  }
+  // sample both ears
+  var N = Math.max(200, Math.round(pw * 1.5)), mx = 1e-9, a = new Float32Array(N), b = new Float32Array(N);
+  for (var i = 0; i < N; i++){ var t = o.t0 + (o.t1 - o.t0) * i / (N - 1); a[i] = o.sL(t); b[i] = o.sR(t); mx = Math.max(mx, Math.abs(a[i]), Math.abs(b[i])); }
+  if (o.zoom){
+    g.setLineDash([3, 4]); g.lineWidth = 1.25;
+    [[o.zc, o.leadCol], [o.zc + o.tau, o.lagCol]].forEach(function(m){ var xx = X(m[0]); g.strokeStyle = m[1]; g.beginPath(); g.moveTo(xx, pt); g.lineTo(xx, pt + ph); g.stroke(); });
+    g.setLineDash([]);
+  }
+  [[a, col.L], [b, col.R]].forEach(function(pair){
+    var arr = pair[0]; g.strokeStyle = pair[1]; g.lineWidth = 2; g.lineJoin = 'round'; g.beginPath();
+    for (var j = 0; j < N; j++){ var xx = pl + pw * j / (N - 1), yy = my - arr[j] / mx * amp; if (j) g.lineTo(xx, yy); else g.moveTo(xx, yy); }
+    g.stroke();
+  });
+  if (o.zoom){
+    var xa = X(o.zc), xb = X(o.zc + o.tau), yb = 22, label = Math.round(o.tau * 1e6) + ' µs';
+    g.strokeStyle = col.ink; g.fillStyle = col.ink; g.lineWidth = 1.5;
+    if (xb - xa > 3){
+      g.beginPath(); g.moveTo(xa, yb); g.lineTo(xb, yb); g.moveTo(xa, yb - 5); g.lineTo(xa, yb + 5); g.moveTo(xb, yb - 5); g.lineTo(xb, yb + 5); g.stroke();
+    }
+    g.font = '500 12px ' + FONT_DATA; g.textAlign = 'center';
+    g.fillText(o.tau > 0 ? label : '0 µs, no difference', clamp((xa + xb) / 2, 60, w - 60), 13);
+  }
+}
+function drawScope(){
+  if ($('#view-explore').hidden) return;
+  var css = getComputedStyle(document.documentElement);
+  var C = function(k){ return css.getPropertyValue(k).trim(); };
+  var col = { L: C('--left'), R: C('--right'), line: C('--line'), muted: C('--muted'), ink: C('--ink'), hl: C('--sunken') };
+  var r = itdFor(S.angle, S.head), tau = r.tau, f = S.freq, base, T, zc;
+  if (S.mode === 'tone'){
+    base = function(t){ return Math.sin(2 * Math.PI * f * t); }; T = Math.max(2 / f, 0.01); zc = 0;
+  } else {
+    var nb = getNoise(f, SR);
+    base = function(t){ return noiseAt(nb, t); }; T = Math.max(3 / f, 0.015); zc = findRise(base, 0.6 + T * 0.25, T * 2, nb.sr);
+  }
+  var sL = r.lead === 'R' ? function(t){ return base(t - tau); } : base;
+  var sR = r.lead === 'L' ? function(t){ return base(t - tau); } : base;
+  var t0 = zc - T * 0.25, Z = 0.0012, zm = zc + tau / 2;
+  var leadCol = r.lead === 'L' ? col.L : col.R, lagCol = r.lead === 'L' ? col.R : col.L;
+  drawWave($('#scopeMain'), { t0: t0, t1: t0 + T, sL: sL, sR: sR, col: col, zc: zc, hl: [zm - Z, zm + Z] });
+  drawWave($('#scopeZoom'), { t0: zm - Z, t1: zm + Z, sL: sL, sR: sR, col: col, zc: zc, zoom: true, tau: tau, leadCol: leadCol, lagCol: lagCol });
+  var cyc = Math.round(T * f);
+  $('#scopeCap').textContent = S.mode === 'tone'
+    ? cyc + ' cycle' + (cyc === 1 ? '' : 's') + ' of the ' + f + ' Hz tone (' + num(T * 1000, 1) + ' ms). Times are measured from the first ear’s zero crossing.'
+    : num(T * 1000, 1) + ' ms of the ' + freqLabel('rumble', f) + '. Times are measured from the first ear’s zero crossing.';
+}
+if (window.ResizeObserver){ var ro = new ResizeObserver(scheduleScope); ro.observe($('#scopeMain')); ro.observe($('#scopeZoom')); }
+else window.addEventListener('resize', scheduleScope);
+try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', scheduleScope); } catch(e){}
+new MutationObserver(scheduleScope).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleScope);
+
+/* ───── segmented control (sound type) ───── */
+$$('.seg[data-bind]').forEach(function(seg){
+  var key = seg.dataset.bind;
+  $$('button', seg).forEach(function(b){
+    b.addEventListener('click', function(){
+      S[key] = b.dataset.value;
+      updateExplore();
+      if (explorePlaying){ AE.setGuard(S.freq, false); if (S.mode === 'tone') AE.startTone(S.freq); else AE.startRumble(); }
+    });
+  });
+});
+
+/* ───── direction cues page ───── */
+function wavePath(x0, x1, yMid, amp, period, shift){
+  var d = '';
+  for (var x = x0; x <= x1; x += 1){ var y = yMid - amp * Math.sin(2 * Math.PI * (x - x0 - shift) / period); d += (x === x0 ? 'M' : 'L') + x + ' ' + y.toFixed(2) + ' '; }
+  return d;
+}
+$('#figT1').setAttribute('d', wavePath(6, 154, 32, 22, 54, 0));
+$('#figT2').setAttribute('d', wavePath(6, 154, 32, 22, 54, 13));
+$('#figL1').setAttribute('d', wavePath(6, 154, 32, 24, 54, 0));
+$('#figL2').setAttribute('d', wavePath(6, 154, 32, 12, 54, 0));
+var AW_ROWS = [20, 31.5, 50, 63, 100, 160, 200, 250, 315, 400];
+function renderAwTable(){
+  $('#awHead').textContent = S.aw ? 'Applied, anchor ' + S.awAnchor + ' Hz' : 'Applied (off)';
+  $('#awTable').innerHTML = AW_ROWS.map(function(f){
+    var c = compDb(f);
+    return '<tr><td>' + f + ' Hz</td><td class="num">' + num(aWeightDb(f), 1) + ' dB</td><td class="num">' + (c < -0.05 ? num(c, 1) + ' dB' : '0 dB') + '</td></tr>';
+  }).join('');
+}
+
+/* ───── keyboard ───── */
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape') stopEverything(); });
+
+/* ───── routing ───── */
+var VIEWS = ['setup', 'explore', 'cues'], view = null;
+function route(){
+  var h = (location.hash || '').replace('#', ''), v = VIEWS.indexOf(h) >= 0 ? h : 'setup', changed = v !== view;
+  view = v;
+  VIEWS.forEach(function(n){ $('#view-' + n).hidden = n !== v; });
+  $$('.tab').forEach(function(a){ if (a.dataset.view === v) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  if (changed){ stopEverything(); window.scrollTo(0, 0); }
+  if (v === 'explore') updateExplore();
+  if (v === 'cues') renderAwTable();
+}
+window.addEventListener('hashchange', route);
+
+/* ───── start ───── */
+renderLevel();
+renderPlayBtn();
+renderSimpleButtons();
+updateExplore();
+renderAwTable();
+route();
+})();
+</script>
+
+</body></html>
